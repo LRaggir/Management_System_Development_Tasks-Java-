@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Отображение задач</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f2f2f2;
+        }
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            padding: 20px;
+        }
+        .task {
+            width: 300px;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin: 10px;
+            padding: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .task h2 {
+            margin-top: 0;
+            color: #333;
+        }
+        .task p {
+            margin: 5px 0;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <h1>Отображение задач</h1>
+    <div class="container" id="tasksContainer"></div>
+    <script>
+        const tasksContainer = document.getElementById('tasksContainer');
+
+        const id = sessionStorage.getItem('id');
+        console.log(id);
+       
+        if (id) {
+            const url = `http://localhost:8080/gettask?user_id=0`;
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.length === 0) {
+                        const messageElement = document.createElement('p');
+                        messageElement.textContent = 'Задачи отсутствуют';
+                        tasksContainer.appendChild(messageElement);
+                    } else {
+                        data.forEach(task => {
+                            const taskElement = document.createElement('div');
+                            taskElement.classList.add('task');
+                            taskElement.innerHTML = `
+                                <h2>${task.title}</h2>
+                                <p><strong>Описание:</strong> ${task.description}</p>
+                                <p><strong>Приоритет:</strong> ${task.priority}</p>
+                                <button onclick="rejectTask('${task.id}', '${task.title}', '${task.description}', '${task.priority}', '${task.status}')">Взять задачу</button>
+
+                            `;
+                            tasksContainer.appendChild(taskElement);
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Ошибка загрузки задач:', error);
+                    const errorMessageElement = document.createElement('p');
+                    errorMessageElement.textContent = 'Произошла ошибка загрузки задач';
+                    tasksContainer.appendChild(errorMessageElement);
+                });
+        } 
+
+        function rejectTask(taskId, title, description, priority, status) {
+    const url = `http://localhost:8080/edit`;
+
+    const taskData = {
+        id: taskId,
+        title: title,
+        description: description,
+        priority: priority,
+        status: status,
+        performer: id 
+    };
+console.log(taskData);
+            fetch(url, {
+                method: 'POST', 
+                headers: {
+                    'Content-Type': 'application/json' 
+                },
+                body: JSON.stringify(taskData)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                alert('Задача взята успешно.');
+            })
+            .catch(error => {
+                console.error('Ошибка взятия задачи:', error);
+                alert('Произошла ошибка при взятии задачи.');
+            });
+        }
+    </script>
+</body>
+</html>

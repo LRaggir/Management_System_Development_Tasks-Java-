@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Отображение задач</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f2f2f2;
+        }
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            padding: 20px;
+        }
+        .task {
+            width: 300px;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin: 10px;
+            padding: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+        .task h2 {
+            margin-top: 0;
+            color: #333;
+        }
+        .task p {
+            margin: 5px 0;
+            color: #666;
+        }
+        .task button {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Отображение задач</h1>
+    <div class="container" id="tasksContainer">
+       
+    </div>
+    <button onclick="goBack()">Вернуться назад</button>
+
+<script>
+    function goBack() {
+        window.history.back();
+    }
+</script>
+
+    <script>
+        const tasksContainer = document.getElementById('tasksContainer');
+
+        const id = sessionStorage.getItem('id');
+        console.log(id);
+
+        if (id) {
+            const url = `http://localhost:8080/gettask?user_id=${id}`;
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.length === 0) {
+                        const messageElement = document.createElement('p');
+                        messageElement.textContent = 'Задачи отсутствуют';
+                        tasksContainer.appendChild(messageElement);
+                    } else {
+                        data.forEach(task => {
+                            const taskElement = document.createElement('div');
+                            taskElement.classList.add('task');
+                            fetch(`http://localhost:8080/get_id?user_id=${task.author}`)
+                                .then(response => response.json())
+                                .then(authorData => {
+                                    const authorLogin = authorData.email; 
+                                    taskElement.innerHTML = `
+                                        <h2>${task.title}</h2>
+                                        <p><strong>Описание:</strong> ${task.description}</p>
+                                        <p><strong>Статус:</strong> ${task.status}</p>
+                                        <p><strong>Приоритет:</strong> ${task.priority}</p>
+                                        <p><strong>Автор:</strong> ${authorLogin}</p>
+                                        <button onclick="editTask('${task.id}')">Изменить</button>
+                                        <button onclick="rejectTask('${task.id}')">Отказаться</button>
+                                    `;
+                                    tasksContainer.appendChild(taskElement);
+                                })
+                                .catch(error => {
+                                    console.error('Ошибка получения данных об авторе:', error);
+                                });
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Ошибка загрузки задач:', error);
+                    const errorMessageElement = document.createElement('p');
+                    errorMessageElement.textContent = 'Произошла ошибка загрузки задач';
+                    tasksContainer.appendChild(errorMessageElement);
+                });
+        } else {
+            const errorMessageElement = document.createElement('p');
+            errorMessageElement.textContent = 'Отсутствует идентификатор пользователя';
+            tasksContainer.appendChild(errorMessageElement);
+        }
+
+        function editTask(taskId) {
+            window.location.href = `edit_task.html?task_id=${taskId}`;
+        }
+
+        function rejectTask(taskId) {
+            const url = `http://localhost:8080/rejecttask?task_id=${taskId}`;
+            fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify()
+                })
+                .then(response => response.json())
+                .then(data => {
+                    alert('Задача отклонена успешно.');
+                })
+                .catch(error => {
+                    console.error('Ошибка отклонения задачи:', error);
+                    alert('Произошла ошибка при отклонении задачи.');
+                });
+        }
+        
+    </script>
+</body>
+</html>
