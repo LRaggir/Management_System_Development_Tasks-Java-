@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
+import java.lang.reflect.Array;
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -89,6 +91,8 @@ public class TaskController {
     @GetMapping("/get")
     public ResponseEntity<?> getAllTasks() {
         try {
+
+
             Iterable<task> tasks = taskRepository.getAll();
             return ResponseEntity.ok(tasks);
         } catch (Exception e) {

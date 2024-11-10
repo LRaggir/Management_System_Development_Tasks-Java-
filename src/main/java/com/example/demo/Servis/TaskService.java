@@ -52,6 +52,8 @@ public class TaskService implements ITask {
         }
     }
     public Iterable<task> getAll() {
+
+
         return TaskRepository.findAll();
     }
     public Iterable<task> getAll(int user_id) {
